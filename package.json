@@ -1,0 +1,39 @@
+{
+  "name": "storybook-ai-generator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/cli/index.ts",
+    "start": "node dist/cli/index.js",
+    "generate": "node dist/cli/index.js generate",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write .",
+    "validate": "tsc --noEmit && npm run lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.18.0",
+    "@langchain/core": "^1.1.2",
+    "@langchain/google-genai": "^2.0.2",
+    "@langchain/openai": "^1.1.3",
+    "dotenv": "^17.2.3",
+    "glob": "^13.0.0",
+    "openai": "^4.73.0",
+    "ts-morph": "^27.0.2",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@typescript-eslint/eslint-plugin": "^8.48.1",
+    "@typescript-eslint/parser": "^8.48.1",
+    "commander": "^14.0.2",
+    "eslint": "^9.39.1",
+    "prettier": "^3.7.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
