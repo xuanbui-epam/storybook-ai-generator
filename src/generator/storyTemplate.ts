@@ -1,4 +1,4 @@
-import { ComponentMeta } from "../parser/tsParser";
+import { ComponentMeta } from "../model/ComponentMeta";
 import { LLMOutput } from "../ai/llm";
 import path from "path";
 
