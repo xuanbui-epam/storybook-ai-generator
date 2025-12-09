@@ -1,23 +1,11 @@
 import { Project } from "ts-morph";
 import path from "path";
+import { ComponentMeta } from "../model/ComponentMeta";
+import { PropDef } from "../model/PropDef";
 
-export type PropDef = {
-  name: string;
-  type: string;
-  required: boolean;
-  description?: string;
-  defaultValue?: string | number | boolean | null;
-};
-
-export type ComponentMeta = {
-  componentName: string;
-  filePath: string;
-  directory: string;
-  props: PropDef[];
-  rawCode: string;
-};
-
-export async function parseComponentFile(filePath: string): Promise<ComponentMeta | null> {
+export async function parseComponentFile(
+  filePath: string
+): Promise<ComponentMeta | null> {
   const project = new Project({
     tsConfigFilePath: undefined,
     skipAddingFilesFromTsConfig: true,
@@ -37,7 +25,14 @@ export async function parseComponentFile(filePath: string): Promise<ComponentMet
     if (!decl) continue;
     const kind = decl.getKindName();
     // accept function, arrow function, const, class
-    if (["FunctionDeclaration", "ArrowFunction", "ClassDeclaration", "VariableDeclaration"].includes(decl.getKindName())) {
+    if (
+      [
+        "FunctionDeclaration",
+        "ArrowFunction",
+        "ClassDeclaration",
+        "VariableDeclaration",
+      ].includes(decl.getKindName())
+    ) {
       compName = name;
       break;
     }
@@ -53,19 +48,28 @@ export async function parseComponentFile(filePath: string): Promise<ComponentMet
 
   if (!compName) {
     // no obvious component exported
-    console.log("[2.1] No React component export detected, skipping file:", filePath);
+    console.log(
+      "[2.1] No React component export detected, skipping file:",
+      filePath
+    );
     return null;
   }
 
   // find props: look for Interface with name like <CompName>Props or first param typed
   const interfaces = source.getInterfaces();
-  let propsInterfaceName = interfaces.find(i => i.getName().toLowerCase().includes("props"))?.getName();
+  let propsInterfaceName = interfaces
+    .find((i) => i.getName().toLowerCase().includes("props"))
+    ?.getName();
 
   // Also check function parameter of component
-  const declarations = source.getFunctions().filter(f => f.getName() === compName);
+  const declarations = source
+    .getFunctions()
+    .filter((f) => f.getName() === compName);
   if (declarations.length === 0) {
     // try variable declaration (const Comp: React.FC<Props> = ...)
-    const varDecls = source.getVariableDeclarations().filter(v => v.getName() === compName);
+    const varDecls = source
+      .getVariableDeclarations()
+      .filter((v) => v.getName() === compName);
     if (varDecls.length) {
       const v = varDecls[0];
       const typeNode = v.getTypeNode();
@@ -91,18 +95,27 @@ export async function parseComponentFile(filePath: string): Promise<ComponentMet
   let props: PropDef[] = [];
 
   if (propsInterfaceName) {
-    const iface = source.getInterface(propsInterfaceName) || source.getInterface(propsInterfaceName.replace(/^{|}$/g, ""));
+    const iface =
+      source.getInterface(propsInterfaceName) ||
+      source.getInterface(propsInterfaceName.replace(/^{|}$/g, ""));
     if (iface) {
       const propsNodes = iface.getProperties();
-      props = propsNodes.map(p => {
+      props = propsNodes.map((p) => {
         const name = p.getName();
         const type = p.getType().getText();
         const required = !p.hasQuestionToken();
         const jsDocs = p.getJsDocs();
-        const description = jsDocs.length ? jsDocs.map(d => d.getComment()).join("\n") : undefined;
+        const description = jsDocs.length
+          ? jsDocs.map((d) => d.getComment()).join("\n")
+          : undefined;
         return { name, type, required, description };
       });
-      console.log("[2.2] Extracted props interface:", propsInterfaceName, "props count:", props.length);
+      console.log(
+        "[2.2] Extracted props interface:",
+        propsInterfaceName,
+        "props count:",
+        props.length
+      );
     }
   } else {
     // fallback: look for first parameter destructuring to extract props names, but types may be unknown

@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { orchestrate } from "../core/orchestrator";
+import { orchestrate } from "../core/orchestrate";
 
 const program = new Command();
 
