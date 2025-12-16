@@ -1,6 +1,6 @@
 import { ComponentMeta } from "../model/ComponentMeta";
 
-export function buildPrompt(meta: ComponentMeta): string {
+export function buildPrompt(meta: ComponentMeta, availableComponents?: string[]): string {
   const propsJson = JSON.stringify(meta.props, null, 2);
   console.log(
     "[3.0] Building prompt for component:",
@@ -10,12 +10,34 @@ export function buildPrompt(meta: ComponentMeta): string {
     "props"
   );
 
+  // Build available components section for prompt
+  let availableComponentsSection = "";
+  if (availableComponents && availableComponents.length > 0) {
+    const componentsList = availableComponents
+      .filter(name => name !== meta.componentName) // Exclude current component
+      .join(", ");
+    if (componentsList) {
+      availableComponentsSection = `
+AVAILABLE COMPONENTS IN SYSTEM:
+The following components are available in this codebase and can be used in stories:
+${componentsList}
+
+IMPORTANT: When you need to use a component in props (e.g., for ReactNode props like leftIcon, rightIcon, icon, etc.):
+- You MUST ONLY use components from the list above.
+- NEVER create or reference components that are NOT in the list (e.g., do NOT use "Icon", "Icons", or any component not listed above).
+- If no suitable component exists in the list, use simple string values (like emoji "🔍", "✓", "→") or null instead.
+- For ReactNode props, prefer using null or simple string/emoji unless a suitable component from the list exists.
+
+`;
+    }
+  }
+
   return `
 You are a Senior Frontend Architect specializing in React and Storybook.
 
 Your task:
 Analyze the following React component metadata and produce a VALID JSON object (no markdown, no explanation) matching the schema below.
-
+${availableComponentsSection}
 IMPORTANT OUTPUT RULES:
 - You MUST return ONLY a single JSON object.
 - The FIRST character of your response MUST be "{".
@@ -72,6 +94,8 @@ ADDITIONAL RULES:
   - Each scenario's "props" object:
     - MUST only use prop names from "PropsDefinition".
     - MUST use realistic combinations of mock values for meaningful scenarios.
+    - If "children" prop exists, ALWAYS include it in stories with appropriate text content (e.g., "Click me", "Submit", "Cancel" for buttons, or descriptive text for other components).
+    - Do NOT set children to null unless it's an edge case scenario demonstrating empty state.
   - Cover typical states such as:
     - default/primary usage,
     - disabled/readonly,

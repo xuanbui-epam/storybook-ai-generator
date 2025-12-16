@@ -18,6 +18,7 @@ export type AppConfig = {
   llmModel: string;
   llmProvider?: "openai" | "gemini";
   outputDir?: string;
+  useGitDiff?: boolean;
 };
 
 const raw = fs.readFileSync(configPath, "utf-8");

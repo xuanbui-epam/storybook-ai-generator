@@ -1,5 +1,6 @@
 {
     "inputDirectory": "./examples/components",
     "outputFormat": "csf3",
-    "storybookVersion": "7"
+    "storybookVersion": "7",
+    "useGitDiff": false
 }

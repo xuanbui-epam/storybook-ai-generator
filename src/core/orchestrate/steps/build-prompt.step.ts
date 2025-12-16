@@ -10,7 +10,7 @@ export const buildPromptStep: PipelineStep = async (ctx) => {
     return;
   }
 
-  const prompt = buildPrompt(ctx.meta);
+  const prompt = buildPrompt(ctx.meta, ctx.availableComponents);
   ctx.prompt = prompt;
 
   console.log("[3.1] Prompt:", prompt);

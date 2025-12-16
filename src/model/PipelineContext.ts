@@ -9,6 +9,7 @@ export type PipelineContext = {
   prompt?: string;
   llmOutput?: LLMOutput | null;
   storyCode?: string;
+  availableComponents?: string[];
 };
 
 export type PipelineStep = (ctx: PipelineContext) => Promise<void>;

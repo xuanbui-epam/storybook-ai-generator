@@ -122,6 +122,23 @@ export async function parseComponentFile(
     // omitted for brevity; could be implemented later
   }
 
+  // Detect if component uses children prop (even if not explicitly in interface)
+  // Check if children is destructured in function params or used in JSX
+  const usesChildren = detectChildrenUsage(source, compName, text);
+  if (usesChildren) {
+    // Check if children already exists in props
+    const hasChildrenProp = props.some((p) => p.name === "children");
+    if (!hasChildrenProp) {
+      props.push({
+        name: "children",
+        type: "ReactNode",
+        required: false,
+        description: "The content to display inside the component",
+      });
+      console.log("[2.3] Detected children usage, added to props");
+    }
+  }
+
   return {
     componentName: compName,
     filePath,
@@ -129,4 +146,59 @@ export async function parseComponentFile(
     props,
     rawCode: text,
   };
+}
+
+/**
+ * Detects if a component uses the children prop by checking:
+ * 1. If children is destructured in function parameters
+ * 2. If children is used in JSX/return statement
+ */
+function detectChildrenUsage(
+  source: any,
+  compName: string,
+  rawCode: string
+): boolean {
+  // Check 1: Look for children in function parameter destructuring
+  const declarations = source
+    .getFunctions()
+    .filter((f: any) => f.getName() === compName);
+  
+  if (declarations.length > 0) {
+    const fn = declarations[0];
+    const params = fn.getParameters();
+    if (params.length > 0) {
+      const firstParam = params[0];
+      const paramText = firstParam.getText();
+      // Check if children is in destructuring: { children, ... } or { children }
+      if (paramText.includes("children") && paramText.includes("{")) {
+        return true;
+      }
+    }
+  }
+
+  // Check 2: Look for variable declarations (const Comp = ({ children, ... }) => ...)
+  const varDecls = source
+    .getVariableDeclarations()
+    .filter((v: any) => v.getName() === compName);
+  
+  if (varDecls.length > 0) {
+    const varDecl = varDecls[0];
+    const initializer = varDecl.getInitializer();
+    if (initializer) {
+      const initText = initializer.getText();
+      // Check if it's an arrow function with children in params
+      if (initText.includes("children") && initText.includes("=>")) {
+        return true;
+      }
+    }
+  }
+
+  // Check 3: Look for children usage in JSX (simple text search as fallback)
+  // Pattern: {children} or { children } or children in JSX context
+  const childrenPattern = /\{children\}|\{\s*children\s*\}|children\s*[,\}]/;
+  if (childrenPattern.test(rawCode)) {
+    return true;
+  }
+
+  return false;
 }
