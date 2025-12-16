@@ -108,7 +108,7 @@ examples/components/atoms/Button/Button.stories.tsx
 
 This approach keeps stories co-located with components, following modern best practices.
 
-## Installation
+## Installation (inside this repo for development)
 
 ```bash
 npm install
@@ -124,25 +124,83 @@ LLM_MODEL=gemini-2.5-pro  # or "gpt-4o"
 LLM_API_KEY=your_api_key_here
 ```
 
-Edit `config.json`:
-
-```json
-{
-  "inputDirectory": "./examples/components",
-  "outputFormat": "csf3",
-  "storybookVersion": "7"
-}
-```
-
-## Usage
+## Usage inside this repo
 
 ```bash
 # Build the project
 npm run build
 
-# Generate stories
+# Generate stories using the local CLI entry
 npm run generate
 ```
+
+---
+
+## Using as an npm package (recommended)
+
+After you publish this package (or link it locally), you can use the CLI `storybook-ai` in any project.
+
+### 1. Install the package
+
+```bash
+# After publishing to npm:
+npm install @storybook/storybook-ai-generator
+
+# Or when developing locally:
+cd path/to/storybook-ai-generator
+npm link
+
+# In your target project:
+npm link storybook/ai-generator   # or the name you publish
+```
+
+### 2. Initialize configuration
+
+In the root of your target project, run:
+
+```bash
+npx storybook-ai init-config
+```
+
+This will create a `storybook.config.js` file:
+
+```js
+// storybook.config.js
+module.exports = {
+  inputDirectory: "./src/components",
+  outputFormat: "csf3",
+  storybookVersion: "7",
+  llmModel: "gpt-4.1-mini",
+  llmProvider: "openai",
+  // outputDir: "./src/stories",
+  // useGitDiff: false,
+};
+```
+
+Adjust the paths and options to match your project.
+
+### 3. Environment variables in your project
+
+Create a `.env` file in the **target project**:
+
+```env
+LLM_PROVIDER=gemini  # or "openai"
+LLM_MODEL=gemini-2.5-pro  # or "gpt-4o"
+LLM_API_KEY=your_api_key_here
+```
+
+### 4. Generate stories from your project
+
+From the root of the target project:
+
+```bash
+storybook-ai generate
+```
+
+The CLI will:
+- Read `storybook.config.js` from `process.cwd()`
+- Scan the `inputDirectory` for components
+- Generate `.stories.tsx` files next to your components (or into `outputDir` if configured)
 
 ## Example
 
