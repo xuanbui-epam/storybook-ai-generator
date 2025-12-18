@@ -37,126 +37,52 @@ Generated files follow the modern CSF3 standard:
 export const Primary = { args: { ... } };
 ```
 
-## How It Works (Detailed Workflow)
+## How It Works
 
-### 1. Component Discovery
-- Uses glob to scan all `.tsx` files in `inputDirectory`
-- Ignores `.stories.tsx` to avoid regeneration loops
-
-### 2. AST Parsing via ts-morph
-
-For each component file:
-- Extract component name
-- Identify props interface
-- Extract type details
-- Read JSDoc
-- Infer defaults
-
-Example output:
-```json
-{
-  "componentName": "Button",
-  "props": [
-    { "name": "label", "type": "string", "required": true }
-  ]
-}
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   1. Discover   │ ──▶ │   2. Parse      │ ──▶ │   3. Generate   │
+│   Components    │     │   Props (AST)   │     │   Prompt        │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                                                        │
+                                                        ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   6. Write      │ ◀── │   5. Build      │ ◀── │   4. Call       │
+│   Story File    │     │   Story Code    │     │   LLM           │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
 
-### 3. Prompt Generation
+1. **Component Discovery**: Scans `inputDirectory` for `.tsx` files (ignores existing `.stories.tsx`)
 
-We build a structured prompt instructing the LLM to:
-- Summarize component
-- Suggest 3–4 scenarios
-- Generate mock values
-- Return strict JSON
+2. **AST Parsing**: Uses ts-morph to extract component metadata:
+   ```json
+   {
+     "componentName": "Button",
+     "props": [
+       { "name": "label", "type": "string", "required": true }
+     ]
+   }
+   ```
 
-### 4. LLM Processing
+3. **Prompt Generation**: Builds structured prompts with component metadata
 
-The LLM returns:
-```json
-{
-  "ComponentName": "Button",
-  "StoriesScenarios": [...],
-  "PropsDefinition": [...]
-}
-```
+4. **LLM Processing**: Sends to OpenAI/Gemini for intelligent scenario generation
 
-### 5. Story File Generation
+5. **Story Building**: Converts LLM response to CSF3 format
 
-We use CSF3 templates such as:
-```typescript
-export const Primary = {
-  args: {
-    label: "Click me"
-  }
-};
-```
+6. **File Output**: Writes `.stories.tsx` next to your component
 
-### 6. File Output
-
-Stories are saved **in the same directory** as the component:
-
-**Input:**
-```
-examples/components/atoms/Button/Button.tsx
-```
-
-**Output:**
-```
-examples/components/atoms/Button/Button.stories.tsx
-```
-
-This approach keeps stories co-located with components, following modern best practices.
-
-## Installation (inside this repo for development)
+## Installation
 
 ```bash
-npm install
-```
-
-## Configuration
-
-Create a `.env` file:
-
-```env
-LLM_PROVIDER=gemini  # or "openai"
-LLM_MODEL=gemini-2.5-pro  # or "gpt-4o"
-LLM_API_KEY=your_api_key_here
-```
-
-## Usage inside this repo
-
-```bash
-# Build the project
-npm run build
-
-# Generate stories using the local CLI entry
-npm run generate
-```
-
----
-
-## Using as an npm package (recommended)
-
-After you publish this package (or link it locally), you can use the CLI `storybook-ai` in any project.
-
-### 1. Install the package
-
-```bash
-# After publishing to npm:
 npm install @storybook/storybook-ai-generator
-
-# Or when developing locally:
-cd path/to/storybook-ai-generator
-npm link
-
-# In your target project:
-npm link storybook/ai-generator   # or the name you publish
 ```
 
-### 2. Initialize configuration
+## Quick Start
 
-In the root of your target project, run:
+### 1. Initialize configuration
+
+In the root of your project, run:
 
 ```bash
 npx storybook-ai init-config
@@ -179,9 +105,9 @@ module.exports = {
 
 Adjust the paths and options to match your project.
 
-### 3. Environment variables in your project
+### 2. Set up environment variables
 
-Create a `.env` file in the **target project**:
+Create a `.env` file in your project root:
 
 ```env
 LLM_PROVIDER=gemini  # or "openai"
@@ -189,12 +115,10 @@ LLM_MODEL=gemini-2.5-pro  # or "gpt-4o"
 LLM_API_KEY=your_api_key_here
 ```
 
-### 4. Generate stories from your project
-
-From the root of the target project:
+### 3. Generate stories
 
 ```bash
-storybook-ai generate
+npx storybook-ai generate
 ```
 
 The CLI will:
@@ -204,7 +128,7 @@ The CLI will:
 
 ## Example
 
-**Component:** `examples/components/atoms/Button/Button.tsx`
+**Component:** `src/components/Button/Button.tsx`
 
 ```tsx
 export interface ButtonProps {
@@ -219,13 +143,13 @@ export const Button = ({ label, disabled, variant = 'primary', onClick }: Button
 };
 ```
 
-**Generated Story:** `examples/components/atoms/Button/Button.stories.tsx`
+**Generated Story:** `src/components/Button/Button.stories.tsx`
 
 ```tsx
 import { Button } from "./Button";
 
 export default {
-  title: "Atoms/Button",
+  title: "Components/Button",
   component: Button,
 };
 
@@ -257,24 +181,17 @@ export const Disabled = {
 };
 ```
 
-## Project Structure
+## Configuration Options
 
-```
-src/
-├── ai/
-│   ├── llm.ts              # LLM integration (OpenAI/Gemini)
-│   └── promptBuilder.ts    # Prompt construction
-├── cli/
-│   └── index.ts            # CLI entry point
-├── core/
-│   ├── config.ts           # Configuration loader
-│   └── orchestrator.ts     # Main workflow
-├── generator/
-│   ├── storyTemplate.ts    # Story file template
-│   └── writer.ts           # File writer
-└── parser/
-    └── tsParser.ts         # AST parsing with ts-morph
-```
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `inputDirectory` | string | `"./src/components"` | Directory to scan for components |
+| `outputFormat` | string | `"csf3"` | Storybook format (csf3) |
+| `storybookVersion` | string | `"7"` | Storybook version |
+| `llmModel` | string | - | LLM model to use |
+| `llmProvider` | string | - | LLM provider (openai/gemini) |
+| `outputDir` | string | - | Optional: Output directory for stories |
+| `useGitDiff` | boolean | `false` | Only process changed files |
 
 ## Benefits
 
@@ -284,6 +201,10 @@ src/
 ✅ **AI-Powered**: Intelligent scenario generation  
 ✅ **Modern Format**: CSF3 Storybook format  
 ✅ **Flexible**: Supports OpenAI and Gemini  
+
+## Contributing
+
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for development setup and contribution guidelines.
 
 ## License
 
