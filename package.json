@@ -1,6 +1,6 @@
 {
   "name": "@xsoft/storybook-ai-generator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A fully automated Storybook file generator powered by Node.js, TypeScript, ts-morph, and LLM reasoning.",
   "main": "dist/cli/index.js",
   "private": false,
