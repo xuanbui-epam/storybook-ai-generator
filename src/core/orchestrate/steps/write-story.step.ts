@@ -11,7 +11,11 @@ export const writeStoryStep: PipelineStep = async (ctx) => {
   }
 
   try {
-    const writtenPath = await writeStoryFile(ctx.currentFile, ctx.storyCode);
+    const writtenPath = await writeStoryFile(
+      ctx.currentFile,
+      ctx.storyCode,
+      ctx.framework
+    );
     console.log("[6] Written story for component:", ctx.meta.componentName);
     console.log("    ->", writtenPath);
   } catch (error) {

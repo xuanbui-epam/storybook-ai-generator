@@ -1,20 +1,30 @@
 import { ComponentMeta } from "../model/ComponentMeta";
+import { Framework } from "../model/Framework";
 
-export function buildPrompt(meta: ComponentMeta, availableComponents?: string[]): string {
+export function buildPrompt(
+  meta: ComponentMeta,
+  framework: Framework,
+  availableComponents?: string[]
+): string {
   const propsJson = JSON.stringify(meta.props, null, 2);
   console.log(
-    "[3.0] Building prompt for component:",
+    "[3.0] Building prompt for",
+    framework,
+    "component:",
     meta.componentName,
     "with",
     meta.props.length,
     "props"
   );
 
+  // Framework-specific configurations
+  const frameworkConfig = getFrameworkConfig(framework);
+
   // Build available components section for prompt
   let availableComponentsSection = "";
   if (availableComponents && availableComponents.length > 0) {
     const componentsList = availableComponents
-      .filter(name => name !== meta.componentName) // Exclude current component
+      .filter((name) => name !== meta.componentName) // Exclude current component
       .join(", ");
     if (componentsList) {
       availableComponentsSection = `
@@ -22,21 +32,21 @@ AVAILABLE COMPONENTS IN SYSTEM:
 The following components are available in this codebase and can be used in stories:
 ${componentsList}
 
-IMPORTANT: When you need to use a component in props (e.g., for ReactNode props like leftIcon, rightIcon, icon, etc.):
+IMPORTANT: When you need to use a component in props (e.g., for ${frameworkConfig.childrenPropExample}):
 - You MUST ONLY use components from the list above.
 - NEVER create or reference components that are NOT in the list (e.g., do NOT use "Icon", "Icons", or any component not listed above).
 - If no suitable component exists in the list, use simple string values (like emoji "🔍", "✓", "→") or null instead.
-- For ReactNode props, prefer using null or simple string/emoji unless a suitable component from the list exists.
+- For ${frameworkConfig.childrenPropType} props, prefer using null or simple string/emoji unless a suitable component from the list exists.
 
 `;
     }
   }
 
   return `
-You are a Senior Frontend Architect specializing in React and Storybook.
+You are a Senior Frontend Architect specializing in ${frameworkConfig.displayName} and Storybook.
 
 Your task:
-Analyze the following React component metadata and produce a VALID JSON object (no markdown, no explanation) matching the schema below.
+Analyze the following ${frameworkConfig.displayName} component metadata and produce a VALID JSON object (no markdown, no explanation) matching the schema below.
 ${availableComponentsSection}
 IMPORTANT OUTPUT RULES:
 - You MUST return ONLY a single JSON object.
@@ -106,4 +116,39 @@ Your response must be ONLY the JSON object described above. Do not write any exp
 
 Begin now.
   `.trim();
+}
+
+interface FrameworkPromptConfig {
+  displayName: string;
+  childrenPropExample: string;
+  childrenPropType: string;
+}
+
+function getFrameworkConfig(framework: Framework): FrameworkPromptConfig {
+  switch (framework) {
+    case "react":
+      return {
+        displayName: "React",
+        childrenPropExample: "ReactNode props like leftIcon, rightIcon, icon, etc.",
+        childrenPropType: "ReactNode",
+      };
+    case "angular":
+      return {
+        displayName: "Angular",
+        childrenPropExample: "template reference props or content projection",
+        childrenPropType: "TemplateRef",
+      };
+    case "vue":
+      return {
+        displayName: "Vue 3",
+        childrenPropExample: "slot props or component props",
+        childrenPropType: "Component/slot",
+      };
+    default:
+      return {
+        displayName: framework,
+        childrenPropExample: "component props",
+        childrenPropType: "Component",
+      };
+  }
 }

@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
+import { Framework, detectFramework } from "../model/Framework";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ export type AppConfig = {
   llmApiKey: string;
   outputDir?: string;
   useGitDiff?: boolean;
+  framework?: Framework;
 };
 
 function loadConfig(): AppConfig {
@@ -39,7 +41,19 @@ function loadConfig(): AppConfig {
       );
     }
 
-    return resolved as AppConfig;
+    const config = resolved as AppConfig;
+
+    // Auto-detect framework if not specified
+    if (!config.framework) {
+      config.framework = detectFramework(projectRoot);
+      console.log(
+        `[Config] Framework not specified, auto-detected: ${config.framework}`
+      );
+    } else {
+      console.log(`[Config] Using configured framework: ${config.framework}`);
+    }
+
+    return config;
   }
 
   throw new Error(

@@ -1,8 +1,8 @@
 import { PipelineStep } from "../../../model/PipelineContext";
-import { parseComponentFile } from "../../../parser/tsParser";
+import { ParserFactory } from "../../../parser/ParserFactory";
 
 /**
- * Step: parse the current file into ComponentMeta.
+ * Step: parse the current file into ComponentMeta using framework-specific parser.
  */
 export const parseComponentStep: PipelineStep = async (ctx) => {
   const file = ctx.currentFile;
@@ -11,7 +11,9 @@ export const parseComponentStep: PipelineStep = async (ctx) => {
   console.log("[2] Parsing component file…");
 
   try {
-    const meta = await parseComponentFile(file);
+    // Get framework-specific parser
+    const parser = ParserFactory.getParser(ctx.framework);
+    const meta = await parser.parseComponentFile(file);
 
     if (!meta) {
       console.log("[2.1] No component found, skipping.");

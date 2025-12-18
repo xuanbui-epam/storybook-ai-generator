@@ -122,7 +122,8 @@ async function callOpenAI(prompt: string): Promise<LLMOutput> {
     // Try structured output with proper chain
     if (typeof model.withStructuredOutput === "function") {
       console.log("[4.1] Trying withStructuredOutput (jsonMode)...");
-      const structuredModel = model.withStructuredOutput(LLMOutputSchema, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const structuredModel = (model as any).withStructuredOutput(LLMOutputSchema, {
         method: "jsonMode",
       });
       const chain = chatPrompt.pipe(structuredModel);

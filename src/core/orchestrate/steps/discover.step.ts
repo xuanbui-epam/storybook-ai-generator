@@ -2,17 +2,16 @@
 import path from "path";
 import { globSync } from "glob";
 import { execSync } from "child_process";
-import { Project } from "ts-morph";
 import { PipelineStep } from "../../../model/PipelineContext";
 import { config } from "../../config";
+import { getFileExtensionGlob } from "../../../model/Framework";
+import { ParserFactory } from "../../../parser/ParserFactory";
 
 const STORY_IGNORE_PATTERNS = [
   "**/*.stories.*",
   "**/*.story.*",
   "**/node_modules/**",
 ];
-
-const SUPPORTED_EXTENSIONS_GLOB = "*.{tsx,ts,jsx}";
 
 /**
  * Step: discover component files under ctx.inputDir.
@@ -23,24 +22,33 @@ const SUPPORTED_EXTENSIONS_GLOB = "*.{tsx,ts,jsx}";
  */
 export const discoverStep: PipelineStep = async (ctx) => {
   const useGitDiff = config.useGitDiff || false; // Default to false if not specified
+  const framework = ctx.framework || config.framework || "react";
+
+  // Get framework-specific file extension glob
+  const extensionGlob = getFileExtensionGlob(framework);
 
   // First, scan all component files to get available components list
-  const pattern = path.join(ctx.inputDir, "**", SUPPORTED_EXTENSIONS_GLOB);
+  const pattern = path.join(ctx.inputDir, "**", extensionGlob);
   const allComponentFiles = globSync(pattern, {
     ignore: STORY_IGNORE_PATTERNS,
   }).filter((filePath) => !isStoryFile(filePath));
 
-  // Extract component names from all files
+  // Extract component names from all files using framework-specific parser
   const componentNames = new Set<string>();
+  const parser = ParserFactory.getParser(framework);
+
   for (const filePath of allComponentFiles) {
     try {
-      const compName = await extractComponentName(filePath);
+      const compName = await parser.extractComponentName(filePath);
       if (compName) {
         componentNames.add(compName);
       }
     } catch (error) {
       // Skip files that can't be parsed
-      console.warn(`[1.0] Failed to parse component name from ${filePath}:`, (error as Error).message);
+      console.warn(
+        `[1.0] Failed to parse component name from ${filePath}:`,
+        (error as Error).message
+      );
     }
   }
   ctx.availableComponents = Array.from(componentNames).sort();
@@ -91,50 +99,6 @@ function isStoryFile(filePath: string): boolean {
   return filePath.includes(".stories.") || filePath.includes(".story.");
 }
 
-/**
- * Extracts component name from a file.
- * Returns the exported component name or null if not found.
- */
-async function extractComponentName(filePath: string): Promise<string | null> {
-  const project = new Project({
-    tsConfigFilePath: undefined,
-    skipAddingFilesFromTsConfig: true,
-  });
-
-  const source = project.addSourceFileAtPath(filePath);
-
-  // Find exported function or const arrow component
-  const exports = source.getExportedDeclarations();
-  let compName: string | undefined;
-
-  for (const [name, declarations] of exports.entries()) {
-    const decl = declarations[0];
-    if (!decl) continue;
-    const kind = decl.getKindName();
-    // accept function, arrow function, const, class
-    if (
-      [
-        "FunctionDeclaration",
-        "ArrowFunction",
-        "ClassDeclaration",
-        "VariableDeclaration",
-      ].includes(kind)
-    ) {
-      compName = name;
-      break;
-    }
-  }
-
-  // if not found, try default export identifier
-  if (!compName) {
-    const defaultExport = source.getDefaultExportSymbol();
-    if (defaultExport) {
-      compName = defaultExport.getName();
-    }
-  }
-
-  return compName || null;
-}
 
 /**
  * Returns staged files from Git, scoped to the given directory.

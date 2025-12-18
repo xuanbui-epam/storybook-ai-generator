@@ -1,8 +1,10 @@
 import { LLMOutput } from "../ai/llm";
 import { ComponentMeta } from "./ComponentMeta";
+import { Framework } from "./Framework";
 
 export type PipelineContext = {
   inputDir: string;
+  framework: Framework;
   files?: string[];
   currentFile?: string;
   meta?: ComponentMeta | null;

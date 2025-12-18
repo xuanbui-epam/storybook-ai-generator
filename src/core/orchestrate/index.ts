@@ -16,6 +16,9 @@ import { writeStoryStep } from "./steps/write-story.step";
  */
 export async function orchestrate(): Promise<void> {
   const inputDir = path.resolve(process.cwd(), config.inputDirectory);
+  const framework = config.framework || "react";
+
+  console.log(`[Orchestrator] Starting with framework: ${framework}`);
 
   const pipelineSteps: PipelineStep[] = [
     discoverStep,
@@ -28,5 +31,5 @@ export async function orchestrate(): Promise<void> {
     ]),
   ];
 
-  await runPipeline(pipelineSteps, { inputDir });
+  await runPipeline(pipelineSteps, { inputDir, framework });
 }

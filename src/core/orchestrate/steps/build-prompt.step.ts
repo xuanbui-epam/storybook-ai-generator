@@ -2,7 +2,7 @@ import { buildPrompt } from "../../../ai/promptBuilder";
 import { PipelineStep } from "../../../model/PipelineContext";
 
 /**
- * Step: build LLM prompt from meta.
+ * Step: build LLM prompt from meta with framework context.
  */
 export const buildPromptStep: PipelineStep = async (ctx) => {
   if (!ctx.meta) {
@@ -10,7 +10,7 @@ export const buildPromptStep: PipelineStep = async (ctx) => {
     return;
   }
 
-  const prompt = buildPrompt(ctx.meta, ctx.availableComponents);
+  const prompt = buildPrompt(ctx.meta, ctx.framework, ctx.availableComponents);
   ctx.prompt = prompt;
 
   console.log("[3.1] Prompt:", prompt);
