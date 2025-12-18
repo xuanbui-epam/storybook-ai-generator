@@ -1,6 +1,6 @@
 {
   "name": "@xsoft/storybook-ai-generator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A fully automated Storybook file generator powered by Node.js, TypeScript, ts-morph, and LLM reasoning.",
   "main": "dist/cli/index.js",
   "private": false,
@@ -16,10 +16,19 @@
     "format": "prettier --write .",
     "validate": "tsc --noEmit && npm run lint"
   },
-  "keywords": ["storybook", "storybook-ai-generator", "langchain", "gemini", "openai"],
+  "keywords": [
+    "storybook",
+    "storybook-ai-generator",
+    "langchain",
+    "gemini",
+    "openai"
+  ],
   "author": "",
   "license": "ISC",
-  "files": ["dist", "README.MD"],
+  "files": [
+    "dist",
+    "README.MD"
+  ],
   "dependencies": {
     "@google/generative-ai": "^0.18.0",
     "@langchain/core": "^1.1.2",
