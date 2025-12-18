@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { Command } from "commander";
 import fs from "fs";
 import path from "path";
@@ -12,17 +13,23 @@ program
 
 program
   .command("init-config")
-  .description("Create a default storybook.config.js file in the current project")
+  .description("Create a default storybook.config.cjs file in the current project")
   .action(() => {
     const projectRoot = process.cwd();
-    const configPath = path.join(projectRoot, "storybook.config.js");
+    const cjsConfigPath = path.join(projectRoot, "storybook.config.cjs");
+    const jsConfigPath = path.join(projectRoot, "storybook.config.js");
 
-    if (fs.existsSync(configPath)) {
+    // Check if either config file already exists
+    if (fs.existsSync(cjsConfigPath)) {
+      console.log("✅ storybook.config.cjs already exists, no changes made.");
+      return;
+    }
+    if (fs.existsSync(jsConfigPath)) {
       console.log("✅ storybook.config.js already exists, no changes made.");
       return;
     }
 
-    const template = `// Configuration for @storybook/storybook-ai-generator
+    const template = `// Configuration for @xsoft/storybook-ai-generator
 // Adjust these paths/settings to match your project structure.
 
 module.exports = {
@@ -39,8 +46,8 @@ module.exports = {
 };
 `;
 
-    fs.writeFileSync(configPath, template, "utf-8");
-    console.log("✅ Created storybook.config.js in project root.");
+    fs.writeFileSync(cjsConfigPath, template, "utf-8");
+    console.log("✅ Created storybook.config.cjs in project root.");
   });
 
 program

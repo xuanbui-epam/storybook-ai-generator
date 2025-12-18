@@ -22,7 +22,7 @@ const SUPPORTED_EXTENSIONS_GLOB = "*.{tsx,ts,jsx}";
  * - Also extracts component names from all files to populate availableComponents
  */
 export const discoverStep: PipelineStep = async (ctx) => {
-  const useGitDiff = config.useGitDiff !== false; // Default to true if not specified
+  const useGitDiff = config.useGitDiff || false; // Default to false if not specified
 
   // First, scan all component files to get available components list
   const pattern = path.join(ctx.inputDir, "**", SUPPORTED_EXTENSIONS_GLOB);

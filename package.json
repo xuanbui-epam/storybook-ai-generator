@@ -16,9 +16,10 @@
     "format": "prettier --write .",
     "validate": "tsc --noEmit && npm run lint"
   },
-  "keywords": [],
+  "keywords": ["storybook", "storybook-ai-generator", "langchain", "gemini", "openai"],
   "author": "",
   "license": "ISC",
+  "files": ["dist", "README.MD"],
   "dependencies": {
     "@google/generative-ai": "^0.18.0",
     "@langchain/core": "^1.1.2",
