@@ -23,6 +23,10 @@
     "gemini",
     "openai"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xuanbui-epam/storybook-ai-generator"
+  },
   "author": "",
   "license": "ISC",
   "files": [
